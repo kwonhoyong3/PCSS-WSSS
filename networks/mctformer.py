@@ -157,7 +157,7 @@ class MCTformerV2_PCSS(VisionTransformer):
 
         np, cp, hp, wp = x_patch.shape
 
-         mtatt = attn_weights[-n_layers:].mean(0)[:, 0:self.num_classes, self.num_classes:].reshape([np, cp, hp, wp])
+        mtatt = attn_weights[-n_layers:].mean(0)[:, 0:self.num_classes, self.num_classes:].reshape([np, cp, hp, wp])
 
         cams = mtatt * x_patch  # B * C * 14 * 14
 
