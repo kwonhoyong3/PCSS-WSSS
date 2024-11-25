@@ -164,10 +164,6 @@ if __name__ == '__main__':
     args.val_path = val_path
     args.exp_path = exp_path
 
-    hif_path = osp.join(exp_path, 'high_influence_freq')
-    if not os.path.exists(hif_path):
-        os.makedirs(hif_path)
-
     args.writer = SummaryWriter(log_dir=exp_path)
 
     # Logger
@@ -314,4 +310,4 @@ if __name__ == '__main__':
                     if is_done_all_class:
                         break
                 
-                model.high_influence_freq_select_save(epo, hif_path, vis=True)
+                model.high_influence_freq_select_save(epo)

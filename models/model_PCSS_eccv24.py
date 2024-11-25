@@ -570,7 +570,7 @@ class model_WSSS():
                 return False
             
 
-    def high_influence_freq_select_save(self, epo, hif_path, vis=False):
+    def high_influence_freq_select_save(self, epo):
         image_size = self.args.input_size
 
         loss_mat = self.loss_mat_for_freq[epo]  # C H W
@@ -579,8 +579,6 @@ class model_WSSS():
         loss_mat = F.interpolate(loss_mat.unsqueeze(0),[image_size,image_size],mode='bicubic',align_corners=False)
         loss_mat = loss_mat[0]
         
-        np.save(osp.join(hif_path, f'LOSS_HIFM_{epo}.npy'), loss_mat.clone().cpu().numpy()) # C H W
-
         # Maximum loss during all epo
         if epo == self.args.fim_start_epo:
             self.max_loss = torch.zeros((self.num_class)).to(self.dev)
@@ -600,7 +598,6 @@ class model_WSSS():
                 
             loss_max_curall_ratio[c_idx] = loss_mat_c_max / self.max_loss[c_idx]
             
-            self.logger.info(f'class {c_idx} all loss max: {self.max_loss[c_idx]} / current loss max: {loss_mat_c_max}, min: {loss_mat_c_min}, ratio: {loss_mat_c_min / loss_mat_c_max}')
             loss_minmax_ratio[c_idx] = loss_mat_c_min / loss_mat_c_max
             
             mask_of_rank_th[c_idx] = (loss_mat_c - loss_mat_c_min) / (self.max_loss[c_idx] - loss_mat_c_min)
@@ -621,71 +618,6 @@ class model_WSSS():
             self.high_influence_freq_mask_prev = self.high_influence_freq_mask_cur
         self.high_influence_freq_mask_cur = mask_of_rank_th
         
-        mask_of_rank_th_np = mask_of_rank_th.cpu().numpy()     # C H W
-        np.save(osp.join(hif_path, f'HIFM_{epo}_mask_lossmat.npy'), mask_of_rank_th_np) 
-
-        if vis:
-            hif_vis_path = osp.join(hif_path, f'vis')
-            if not os.path.exists(hif_vis_path):
-                os.makedirs(hif_vis_path)
-
-            if self.num_class == 20:
-                fig, axs = plt.subplots(4,5)
-            if self.num_class == 80:
-                fig, axs = plt.subplots(8,10)
-            fig.set_figheight(15)
-            fig.set_figwidth(15)
-
-            if self.num_class == 20:
-                for c_idx in range(mask_of_rank_th_np.shape[0]):
-                    mask = mask_of_rank_th_np[c_idx]
-                    axs[c_idx//5, c_idx%5].imshow(mask, cmap='gray')
-                    axs[c_idx//5, c_idx%5].set_title(self.categories[c_idx])
-                    axs[c_idx//5, c_idx%5].set_yticks([])
-                    axs[c_idx//5, c_idx%5].set_xticks([])
-            
-            if self.num_class == 80:
-                for c_idx in range(mask_of_rank_th_np.shape[0]):
-                    mask = mask_of_rank_th_np[c_idx]
-                    axs[c_idx//10, c_idx%10].imshow(mask, cmap='gray')
-                    axs[c_idx//10, c_idx%10].set_title(self.categories[c_idx])
-                    axs[c_idx//10, c_idx%10].set_yticks([])
-                    axs[c_idx//10, c_idx%10].set_xticks([])
-            
-            plt.savefig(osp.join(hif_vis_path, f'HIFM_{epo}_vis.png'), bbox_inches='tight')
-            plt.close()
-
-            hif_used_path = osp.join(hif_path, f'used')
-            if not os.path.exists(hif_used_path):
-                os.makedirs(hif_used_path)
-
-            if self.num_class == 20:
-                fig, axs = plt.subplots(4,5)
-            if self.num_class == 80:
-                fig, axs = plt.subplots(8,10)
-            fig.set_figheight(15)
-            fig.set_figwidth(15)
-
-            if self.num_class == 20:
-                for c_idx in range(mask_of_rank_th_np.shape[0]):
-                    mask = mask_of_rank_th[c_idx].clone()
-                    mask = mask.cpu().numpy()
-                    axs[c_idx//5, c_idx%5].imshow(mask, cmap='gray')
-                    axs[c_idx//5, c_idx%5].set_title(self.categories[c_idx])
-                    axs[c_idx//5, c_idx%5].set_yticks([])
-                    axs[c_idx//5, c_idx%5].set_xticks([])
-            
-            if self.num_class == 80:
-                for c_idx in range(mask_of_rank_th_np.shape[0]):
-                    mask = mask_of_rank_th[c_idx].clone()
-                    mask = mask.cpu().numpy()
-                    axs[c_idx//10, c_idx%10].imshow(mask, cmap='gray')
-                    axs[c_idx//10, c_idx%10].set_title(self.categories[c_idx])
-                    axs[c_idx//10, c_idx%10].set_yticks([])
-                    axs[c_idx//10, c_idx%10].set_xticks([])
-            
-            plt.savefig(osp.join(hif_used_path, f'HIFM_{epo}_used_vis.png'), bbox_inches='tight')
-            plt.close()
 
     def vis_hifm_filter_mc(self, batch_step, epo, org_img, filtered_img, mask, org_cam_norm, filtered_cam_norm, label, name, img_name):
         '''
