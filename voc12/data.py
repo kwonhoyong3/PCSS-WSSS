@@ -93,11 +93,12 @@ def load_img_name_list(dataset_path, coco=False):
     return img_name_list
 
 class COCOClsDataset(Dataset):
-    def __init__(self, img_name_list_path, coco_root, label_file_path, train=True, transform=None, gen_attn=False):
+    def __init__(self, img_name_list_path, coco_root, label_file_path, train=True, transform=None, transform2=None, gen_attn=False):
         self.img_name_list = load_img_name_list(img_name_list_path, coco=True)
         self.label_list = load_image_label_list_from_npy(self.img_name_list, coco=True)
         self.coco_root = coco_root
         self.transform = transform
+        self.transform2 = transform2
         self.train = train
         self.gen_attn = gen_attn
 
@@ -115,8 +116,13 @@ class COCOClsDataset(Dataset):
 
         if self.transform:
             img = self.transform(img)
-
-        return img, label, name
+            
+        if self.transform2:
+            img_diff = self.transform2(img_diff)
+        else:
+            img_diff = self.transform(img_diff)
+        
+        return img_diff, label, name
 
     def __len__(self):
         return len(self.img_name_list)
@@ -126,13 +132,14 @@ from torchvision import transforms
 
     
 class VOC12Dataset(Dataset):
-    def __init__(self, img_name_list_path, voc12_root, train=True, transform=None, gen_attn=False):
+    def __init__(self, img_name_list_path, voc12_root, train=True, transform=None, transform2=None, gen_attn=False):
         # img_name_list_path = os.path.join(img_name_list_path, f'{"train_aug" if train or gen_attn else "val"}_id.txt')
         self.img_name_list = load_img_name_list(img_name_list_path)
         self.label_list = load_image_label_list_from_npy(self.img_name_list)
         self.voc12_root = voc12_root
         self.transform = transform
-
+        self.transform2 = transform2
+        
     def __getitem__(self, idx):
         name = self.img_name_list[idx]
         img = PIL.Image.open(os.path.join(self.voc12_root, 'JPEGImages', name + '.jpg')).convert("RGB")
@@ -141,8 +148,13 @@ class VOC12Dataset(Dataset):
 
         if self.transform:
             img = self.transform(img)
+            
+        if self.transform2:
+            img_diff = self.transform2(img_diff)
+        else:
+            img_diff = self.transform(img_diff)
         
-        return img, label, name
+        return img_diff, label, name
 
     def __len__(self):
         return len(self.img_name_list)

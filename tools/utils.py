@@ -156,30 +156,52 @@ def build_dataset_trm(is_train, args, gen_attn=False):
 
     if args.data_set == 'VOC12':
         args.gen_attention_maps = gen_attn
-        transform = build_transform(is_train, args)
-
-        if not gen_attn:
-            # Train / FIM
-            dataset = voc12.data.VOC12Dataset(img_name_list_path=args.train_list, voc12_root=args.data_path,
-                            train=is_train, gen_attn=gen_attn, transform=transform)
-        else:
+        if gen_attn:
             # Val
+            transform = build_transform(is_train, args)
             dataset = voc12.data.VOC12Dataset(img_name_list_path=args.val_list, voc12_root=args.data_path,
-                            train=is_train, gen_attn=gen_attn, transform=transform)
+                               train=is_train, gen_attn=gen_attn, transform=transform)
+        else:
+            if is_train:
+                # Train
+                transform2 = build_transform(is_train, args)
+                
+                args.color_jitter = None
+                args.aa = None
+                transform = build_transform(is_train, args)
+
+                dataset = voc12.data.VOC12Dataset(img_name_list_path=args.train_list, voc12_root=args.data_path,
+                                train=is_train, gen_attn=gen_attn, transform=transform, transform2=transform2)
+            else:
+                # FIM
+                transform = build_transform(is_train, args)
+                dataset = voc12.data.VOC12Dataset(img_name_list_path=args.train_list, voc12_root=args.data_path,
+                               train=is_train, gen_attn=gen_attn, transform=transform)
             
         nb_classes = 20
 
     elif args.data_set == 'COCO':
         args.gen_attention_maps = gen_attn
-        transform = build_transform(is_train, args)
-    
-        if not gen_attn:
-            # Train / FIM
-            dataset = voc12.data.COCOClsDataset(img_name_list_path=args.train_list, coco_root=args.data_path,label_file_path=args.label_file_path,
+        if gen_attn:
+            # Val
+            transform = build_transform(is_train, args)
+            dataset = voc12.data.COCOClsDataset(img_name_list_path=args.val_list, coco_root=args.data_path,label_file_path=args.label_file_path,
                             train=is_train, gen_attn=gen_attn, transform=transform)
         else:
-            # Validation
-            dataset = voc12.data.COCOClsDataset(img_name_list_path=args.val_list, coco_root=args.data_path,label_file_path=args.label_file_path,
+            if is_train:
+                # Train
+                transform2 = build_transform(is_train, args)
+                
+                args.color_jitter = None
+                args.aa = None
+                transform = build_transform(is_train, args)
+
+                dataset = voc12.data.COCOClsDataset(img_name_list_path=args.train_list, coco_root=args.data_path,label_file_path=args.label_file_path,
+                            train=is_train, gen_attn=gen_attn, transform=transform, transform2=transform2)
+            else:
+                # FIM
+                transform = build_transform(is_train, args)
+                dataset = voc12.data.COCOClsDataset(img_name_list_path=args.train_list, coco_root=args.data_path,label_file_path=args.label_file_path,
                             train=is_train, gen_attn=gen_attn, transform=transform)
     
         nb_classes = 80
