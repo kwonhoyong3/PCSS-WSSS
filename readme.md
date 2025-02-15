@@ -58,13 +58,13 @@ python train_PCSS_coco.py --name [exp_name]
 
 For pretrained model (69.5%):
 ```
-python infer_trm.py --name [exp_name] --load_pretrained [path_to_ckpt] --dict
+python infer_PCSS.py --name [exp_name] --load_pretrained [path_to_ckpt] --dict
 ```
 
 For model you trained:
 
 ```
-python infer_trm.py --name [exp_name] --load_epo [EPOCH] --dict
+python infer_PCSS.py --name [exp_name] --load_epo [EPOCH] --dict
 ```
 
 ## 2.3 Evaluation (CAM)
